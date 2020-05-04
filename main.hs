@@ -39,6 +39,10 @@ sim (x:xs) (y:ys) = max (max (sim xs ys + score [x] [y]) (sim xs (y:ys) + score 
                           (sim (x:xs) ys + score "-" [y] )
 score = similarityScore
 
+--
+
+
+
 mcsLength :: String -> String -> Int
 mcsLength xs ys = mcsLen (length xs) (length ys)
   where
@@ -46,12 +50,12 @@ mcsLength xs ys = mcsLen (length xs) (length ys)
     mcsTable = [[ mcsEntry i j | j<-[0..]] | i<-[0..] ]
 
     mcsEntry :: Int -> Int -> Int
-    mcsEntry _ 0 = 0
-    mcsEntry 0 _ = 0
-    mcsEntry i j
-      | x == y    = 1 + mcsLen (i-1) (j-1)
-      | otherwise = max (mcsLen i (j-1))
-                        (mcsLen (i-1) j)
+    mcsEntry 0 0 = 0
+    mcsEntry _ 0 = scoreSpace
+    mcsEntry 0 _ = scoreSpace
+    mcsEntry i j = max (max (score [x] "-" + mcsLen (i-1) j)
+                        (score "-" [y] + mcsLen i (j-1)))
+                        (mcsLen (i-1) (j-1) + score [x] [y])
       where
          x = xs!!(i-1)
          y = ys!!(j-1)
