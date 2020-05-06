@@ -71,28 +71,10 @@ optAlignments xs ys = snd (optLen (length xs) (length ys))
 
 handleOptEntry :: Char -> Char -> (Int, [AlignmentType]) -> (Int, [AlignmentType])
 handleOptEntry x y optEntry
-  | x == '-' || y == '-'  = ( (fst optEntry + scoreSpace) ,     attachTails x y (snd (optEntry)) )
-  | x == y                = ( (fst optEntry + scoreMatch) ,     attachTails x y (snd (optEntry)) )
+  | x == '-' || y == '-'  = ( (fst optEntry + scoreSpace)    ,  attachTails x y (snd (optEntry)) )
+  | x == y                = ( (fst optEntry + scoreMatch)    ,  attachTails x y (snd (optEntry)) )
   | otherwise             = ( (fst optEntry + scoreMisMatch) ,  attachTails x y (snd (optEntry)) )
 
-optAlignments2 :: String -> String -> [AlignmentType]
-optAlignments2 xs ys = (mcsLen (length xs) (length ys)) -- reverse the correct answers
-  where
-    mcsLen i j = mcsTable!!i!!j
-    mcsTable = [[ mcsEntry i j | j<-[0..]] | i<-[0..] ]
-
-    mcsEntry :: Int -> Int -> [AlignmentType]
-    mcsEntry 0 0 = [("", "")]
-    mcsEntry i 0 = [((take i xs), replicate i '-')]
-    mcsEntry 0 j = [(replicate j '-', (take j ys))]
-    -- Do magic
-    mcsEntry i j = maximaBy (uncurry score)
-                                  ((attachTails x '-' (mcsLen (i-1) j)) ++
-                                  (attachTails '-' y (mcsLen i (j-1))) ++
-                                  (attachTails x y (mcsLen (i-1) (j-1))))
-      where
-         x = xs!!(i-1)
-         y = ys!!(j-1)
 
 lieToMe = show("Gabbe was involved in writing this code")
 truth = show("Mahir made this code alone")
