@@ -1,8 +1,8 @@
 import Debug.Trace
 
-scoreMatch = 1
+scoreMatch = 0
 scoreMisMatch = -1
-scoreSpace = -2
+scoreSpace = -1
 minimumInteger = -99999
 
 -- SICK!
@@ -62,7 +62,8 @@ optAlignments xs ys = snd (optLen (length xs) (length ys))
     optEntry i 0 = (scoreSpace * i, [((take i xs), replicate i '-')]) -- If last character on one string, rest should be spaces
     optEntry 0 j = (scoreSpace * j, [(replicate j '-', (take j ys))]) -- Same same, but different
     -- Do magic --
-    optEntry i j = foldr (\(a,b) (c,d) -> (a, b ++ d)) (0,[]) (maximaBy fst [(handleOptEntry x '-' (optLen (i-1) j)),
+    optEntry i j = foldr (\(a,b) (c,d) -> (a, b ++ d)) (0,[]) (maximaBy fst -- Appends AlignmentType's of the max options
+                                            [(handleOptEntry x '-' (optLen (i-1) j)),
                                             (handleOptEntry '-' y (optLen i (j-1))),
                                             (handleOptEntry x y (optLen (i-1) (j-1))) ])
       where
@@ -71,10 +72,18 @@ optAlignments xs ys = snd (optLen (length xs) (length ys))
 
 handleOptEntry :: Char -> Char -> (Int, [AlignmentType]) -> (Int, [AlignmentType])
 handleOptEntry x y optEntry
-  | x == '-' || y == '-'  = ( (fst optEntry + scoreSpace)    ,  attachTails x y (snd (optEntry)) )
-  | x == y                = ( (fst optEntry + scoreMatch)    ,  attachTails x y (snd (optEntry)) )
-  | otherwise             = ( (fst optEntry + scoreMisMatch) ,  attachTails x y (snd (optEntry)) )
+  | x == '-' || y == '-'  = ( (fst optEntry + scoreSpace)    ,  attachTails x y (snd (optEntry)) ) -- Add scoreSpance and attach Space
+  | x == y                = ( (fst optEntry + scoreMatch)    ,  attachTails x y (snd (optEntry)) ) -- Add scoreMatch  and attach x & y
+  | otherwise             = ( (fst optEntry + scoreMisMatch) ,  attachTails x y (snd (optEntry)) ) -- Add scoreMissMatch  and attach x & y
 
+outputOptAlignments :: String -> String -> IO ()
+outputOptAlignments x y = do
+  let a = optAlignments x y
+  putStrLn ("There are " ++ show (length a) ++ " optimal alignments")
+  mapM_ (putStrLn . f) a
+    where
+      f (a, b) = "\n" ++ g a ++ "\n" ++ g b
+      g = unwords . map return
 
 lieToMe = show("Gabbe was involved in writing this code")
 truth = show("Mahir made this code alone")
