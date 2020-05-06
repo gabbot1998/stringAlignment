@@ -52,7 +52,31 @@ sim (x:xs) (y:ys) = max (max (sim xs ys + score [x] [y]) (sim xs (y:ys) + score 
 type AlignmentType = (String,String)
 
 optAlignments :: String -> String -> [AlignmentType]
-optAlignments xs ys = (mcsLen (length xs) (length ys)) -- reverse the correct answers
+optAlignments xs ys = snd (optLen (length xs) (length ys))
+  where
+    optLen i j = optTable!!i!!j
+    optTable = [[ optEntry i j | j<-[0..]] | i<-[0..] ]
+
+    optEntry :: Int -> Int -> (Int, [AlignmentType])
+    optEntry 0 0 = (0, [("", "")]) -- End of String
+    optEntry i 0 = (scoreSpace * i, [((take i xs), replicate i '-')]) -- If last character on one string, rest should be spaces
+    optEntry 0 j = (scoreSpace * j, [(replicate j '-', (take j ys))]) -- Same same, but different
+    -- Do magic --
+    optEntry i j = foldr (\(a,b) (c,d) -> (a, b ++ d)) (0,[]) (maximaBy fst [(handleOptEntry x '-' (optLen (i-1) j)),
+                                            (handleOptEntry '-' y (optLen i (j-1))),
+                                            (handleOptEntry x y (optLen (i-1) (j-1))) ])
+      where
+         x = xs!!(i-1)
+         y = ys!!(j-1)
+
+handleOptEntry :: Char -> Char -> (Int, [AlignmentType]) -> (Int, [AlignmentType])
+handleOptEntry x y optEntry
+  | x == '-' || y == '-'  = ( (fst optEntry + scoreSpace) ,     attachTails x y (snd (optEntry)) )
+  | x == y                = ( (fst optEntry + scoreMatch) ,     attachTails x y (snd (optEntry)) )
+  | otherwise             = ( (fst optEntry + scoreMisMatch) ,  attachTails x y (snd (optEntry)) )
+
+optAlignments2 :: String -> String -> [AlignmentType]
+optAlignments2 xs ys = (mcsLen (length xs) (length ys)) -- reverse the correct answers
   where
     mcsLen i j = mcsTable!!i!!j
     mcsTable = [[ mcsEntry i j | j<-[0..]] | i<-[0..] ]
@@ -69,25 +93,6 @@ optAlignments xs ys = (mcsLen (length xs) (length ys)) -- reverse the correct an
       where
          x = xs!!(i-1)
          y = ys!!(j-1)
-
--- HEEEEJ
--- HEJ
---
--- J
--- J
---
--- EJ  -J  EJ
--- EJ  EJ  -J  [(EJ,EJ)]
---
--- EEJ -EJ EEJ
--- HEJ HEJ -EJ [(EEJ,HEJ), (-EJ,HEJ), (EEJ,-EJ)]
--- |         \
--- EEEJ      EEEJ EEEJ
--- -HEJ      H-EJ --EJ
--- |         |       \
--- EEEEJ     EEEEJ   EEEEJ  EEEEJ
--- --HEJ     -H-EJ   H--EJ  ---EJ
-
 
 lieToMe = show("Gabbe was involved in writing this code")
 truth = show("Mahir made this code alone")
